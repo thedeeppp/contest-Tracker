@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaSignInAlt, FaSignOutAlt, FaUser, FaSun, FaMoon } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-import ContestCard from "./ContestCard";
 
 const ContestTracker = () => {
   const navigate = useNavigate();
@@ -23,7 +22,6 @@ const ContestTracker = () => {
       if (data && data.upcoming && data.past) {
         setContests(data);
 
-        // Initialize time remaining for each contest
         const now = new Date();
         const initialTimeRemaining = {};
 
@@ -109,15 +107,13 @@ const ContestTracker = () => {
     }
   }, []);
 
-  // Toggle theme function
   const toggleTheme = () => {
-    const newTheme = darkMode ? "light" : "dark";
-    setDarkMode(!darkMode);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", !darkMode);
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("theme", newDarkMode ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", newDarkMode);
   };
 
-  // Toggle bookmark function
   const toggleBookmark = async (contest) => {
     if (!user) {
       navigate('/auth');
@@ -139,7 +135,6 @@ const ContestTracker = () => {
     }
   };
 
-  // Fetch bookmarks for the logged-in user
   const fetchBookmarks = async () => {
     if (!user) return;
 
@@ -151,25 +146,38 @@ const ContestTracker = () => {
     }
   };
 
-  // Check if a contest is bookmarked
   const isBookmarked = (contestId) => {
     return bookmarks.some((b) => b.contest?._id === contestId);
   };
 
+  // Helper to format date and time
+  const formatDateTime = (date) => {
+    const d = new Date(date);
+    return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+  };
+
   return (
-    <div className={`${darkMode ? "dark bg-gray-900 text-white" : "bg-white text-black"} min-h-screen transition-colors duration-300`}> 
-      <div className="container mx-auto px-4 py-8">
-        <header className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Coding Contest Tracker</h1>
-          <div className="flex items-center space-x-3">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      darkMode 
+        ? "dark bg-gray-900 text-gray-100" 
+        : "bg-gray-50 text-gray-900"
+    }`}>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header Section */}
+        <header className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-8 border-b pb-4 dark:border-gray-700">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Coding Contest Tracker
+          </h1>
+          <div className="flex items-center justify-end gap-4">
             {user ? (
-              <div className="flex items-center space-x-3">
-                <span className="flex items-center space-x-1">
-                  <FaUser /> <span>{user.username}</span>
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                  <FaUser className="text-blue-500" /> 
+                  <span className="font-medium">{user.username}</span>
                 </span>
                 <button
                   onClick={logout}
-                  className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                 >
                   <FaSignOutAlt /> Logout
                 </button>
@@ -177,73 +185,187 @@ const ContestTracker = () => {
             ) : (
               <button
                 onClick={() => navigate('/auth')}
-                className="flex items-center bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 <FaSignInAlt /> Login
               </button>
             )}
             <button
               onClick={toggleTheme}
-              className="ml-4 px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
+              className="p-2 bg-gray-200 dark:bg-gray-800 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
             >
-              {darkMode ? <FaSun /> : <FaMoon />}
+              {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
             </button>
           </div>
         </header>
 
-        <div className="mb-6 flex flex-wrap justify-between items-center">
-          <label className="font-semibold">Filter by Platform:</label>
-          <select 
-            onChange={(e) => setPlatformFilter(e.target.value)}
-            className="p-2 border rounded bg-gray-100 dark:bg-gray-800"
-            value={platformFilter}
-          >
-            <option value="all">All Platforms</option>
-            <option value="Codeforces">Codeforces</option>
-            <option value="CodeChef">CodeChef</option>
-            <option value="LeetCode">LeetCode</option>
-          </select>
-          <button onClick={fetchContests} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Refresh Contests
-          </button>
-        </div>
+        {/* Filter Section */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-center bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <label className="font-semibold text-lg">Filter:</label>
+            <select
+              onChange={(e) => setPlatformFilter(e.target.value)}
+              className="w-full md:w-auto p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              value={platformFilter}
+            >
+              <option value="all">All Platforms</option>
+              <option value="Codeforces">Codeforces</option>
+              <option value="CodeChef">CodeChef</option>
+              <option value="LeetCode">LeetCode</option>
+            </select>
+          </div>
+          <div className="md:col-start-3">
+            <button
+              onClick={fetchContests}
+              className="w-full md:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>Refresh</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+        </section>
 
+        {/* Contests Section */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="loader border-4 border-gray-200 rounded-full border-t-4 border-t-blue-500 h-12 w-12 animate-spin"></div>
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-gray-200 rounded-full border-t-blue-500 animate-spin"></div>
+              <div className="absolute inset-0 w-8 h-8 m-2 border-4 border-gray-300 rounded-full border-t-purple-500 animate-spin -reverse"></div>
+            </div>
           </div>
         ) : (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Upcoming Contests</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {contests.upcoming
-                .filter(c => platformFilter === "all" || c.platform === platformFilter)
-                .map(contest => (
-                  <ContestCard 
-                    key={contest._id} 
-                    contest={contest} 
-                    darkMode={darkMode} 
-                    isBookmarked={isBookmarked} 
-                    onToggleBookmark={toggleBookmark} 
-                    timeRemaining={timeRemaining}
-                  />
-                ))}
-            </div>
-            <h2 className="text-2xl font-bold mt-8 mb-4">Past Contests</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {contests.past
-                .filter(c => platformFilter === "all" || c.platform === platformFilter)
-                .map(contest => (
-                  <ContestCard 
-                    key={contest._id} 
-                    contest={contest} 
-                    darkMode={darkMode} 
-                    isBookmarked={isBookmarked} 
-                    onToggleBookmark={toggleBookmark} 
-                    timeRemaining={timeRemaining}
-                  />
-                ))}
-            </div>
+          <div className="space-y-12">
+            {/* Upcoming Contests Table */}
+            <section>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span className="w-2 h-6 bg-blue-500 rounded"></span>
+                Upcoming Contests
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-gray-200 dark:bg-gray-700">
+                      <th className="p-3 text-left font-semibold">Platform</th>
+                      <th className="p-3 text-left font-semibold">Name</th>
+                      <th className="p-3 text-left font-semibold">Start</th>
+                      <th className="p-3 text-left font-semibold">Time Remain</th>
+                      <th className="p-3 text-left font-semibold">Bookmark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contests.upcoming
+                      .filter(c => platformFilter === "all" || c.platform === platformFilter)
+                      .map((contest, index) => (
+                        <tr
+                          key={contest._id}
+                          className={`border-b dark:border-gray-700 ${
+                            index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-900"
+                          } hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                        >
+                          <td className="p-3">
+                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                              {contest.platform || "N/A"}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <a 
+                              href={contest.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-500 hover:underline"
+                            >
+                              {contest.name}
+                            </a>
+                          </td>
+                          <td className="p-3">{formatDateTime(contest.date)}</td>
+                          <td className="p-3 text-gray-500 dark:text-gray-400">
+                            {timeRemaining[contest._id]}
+                          </td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => toggleBookmark(contest)}
+                              className={`p-2 rounded-full ${
+                                isBookmarked(contest._id)
+                                  ? "bg-yellow-500 text-white"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              } hover:bg-yellow-400 transition-colors`}
+                            >
+                              {isBookmarked(contest._id) ? "★" : "☆"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Past Contests Table */}
+            <section>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span className="w-2 h-6 bg-purple-500 rounded"></span>
+                Past Contests
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-gray-200 dark:bg-gray-700">
+                      <th className="p-3 text-left font-semibold">Platform</th>
+                      <th className="p-3 text-left font-semibold">Name</th>
+                      <th className="p-3 text-left font-semibold">Start</th>
+                      <th className="p-3 text-left font-semibold">Time Remain</th>
+                      <th className="p-3 text-left font-semibold">Bookmark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contests.past
+                      .filter(c => platformFilter === "all" || c.platform === platformFilter)
+                      .map((contest, index) => (
+                        <tr
+                          key={contest._id}
+                          className={`border-b dark:border-gray-700 ${
+                            index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-900"
+                          } hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                        >
+                          <td className="p-3">
+                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                              {contest.platform || "N/A"}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <a 
+                              href={contest.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-500 hover:underline"
+                            >
+                              {contest.name}
+                            </a>
+                          </td>
+                          <td className="p-3">{formatDateTime(contest.date)}</td>
+                          <td className="p-3 text-gray-500 dark:text-gray-400">
+                            Ended
+                          </td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => toggleBookmark(contest)}
+                              className={`p-2 rounded-full ${
+                                isBookmarked(contest._id)
+                                  ? "bg-yellow-500 text-white"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              } hover:bg-yellow-400 transition-colors`}
+                            >
+                              {isBookmarked(contest._id) ? "★" : "☆"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         )}
       </div>
@@ -251,4 +373,4 @@ const ContestTracker = () => {
   );
 };
 
-export default ContestTracker; 
+export default ContestTracker;
