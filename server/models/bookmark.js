@@ -1,22 +1,26 @@
+// models/Bookmark.js
 import mongoose from 'mongoose';
 
-const bookmarkSchema = new mongoose.Schema({
-  userId: {
-    type: String,
+const BookmarkSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
-  contestId: {
+  contest: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Contest',
     required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, { timestamps: true });
+});
 
-// Compound index to ensure a user can bookmark a contest only once
-bookmarkSchema.index({ userId: 1, contestId: 1 }, { unique: true });
+// Compound index to prevent duplicate bookmarks
+BookmarkSchema.index({ user: 1, contest: 1 }, { unique: true });
 
-const Bookmark = mongoose.model('Bookmark', bookmarkSchema);
+const Bookmark = mongoose.model('Bookmark', BookmarkSchema);
 
 export default Bookmark;
-
-console.log('Bookmark model created successfully');

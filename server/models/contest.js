@@ -1,6 +1,7 @@
+// models/Contest.js
 import mongoose from 'mongoose';
 
-const contestSchema = new mongoose.Schema({
+const ContestSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
@@ -8,37 +9,34 @@ const contestSchema = new mongoose.Schema({
   platform: {
     type: String,
     required: true,
-    enum: ['Codeforces', 'CodeChef', 'Leetcode']
+    enum: ['Codeforces', 'CodeChef', 'LeetCode']
   },
-  startTime: {
+  date: {
     type: Date,
     required: true
   },
-  endTime: {
-    type: Date,
-    required: true
-  },
-  url: {
+  link: {
     type: String,
     required: true
   },
-  status: {
-    type: String,
-    enum: ['upcoming', 'ongoing', 'past'],
-    required: true
-  },
-  youtubeLink: {
+  solutionLink: {
     type: String,
     default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
-}, { timestamps: true });
+});
 
-// Index for faster queries
-contestSchema.index({ platform: 1, startTime: 1 });
-contestSchema.index({ status: 1 });
+// Compound index for uniqueness
+ContestSchema.index({ name: 1, platform: 1 }, { unique: true });
 
-const Contest = mongoose.model('Contest', contestSchema);
+const Contest = mongoose.model('Contest', ContestSchema);
 
 export default Contest;
 
-console.log('Contest model created successfully');
