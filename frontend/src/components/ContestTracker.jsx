@@ -4,6 +4,21 @@ import axios from "axios";
 import { FaSignInAlt, FaSignOutAlt, FaUser, FaSun, FaMoon } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
+// Set up axios interceptor to add auth token to requests
+axios.interceptors.request.use(
+  config => {
+    // Get token from localStorage
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
+
 const ContestTracker = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -132,6 +147,12 @@ const ContestTracker = () => {
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
+      if (error.response && error.response.status === 401) {
+        // Handle unauthorized error - maybe redirect to login
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/auth');
+      }
     }
   };
 
@@ -143,6 +164,12 @@ const ContestTracker = () => {
       setBookmarks(data);
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
+      if (error.response && error.response.status === 401) {
+        // Handle unauthorized error - maybe redirect to login
+        alert("Your session has expired. Please login again.");
+        logout();
+        navigate('/auth');
+      }
     }
   };
 
@@ -308,8 +335,8 @@ const ContestTracker = () => {
                 <span className="w-2 h-6 bg-purple-500 rounded"></span>
                 Past Contests
               </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
+              <div className="overflow-x-500px">
+                <table className="w-50px border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-200 dark:bg-gray-700">
                       <th className="p-3 text-left font-semibold">Platform</th>
