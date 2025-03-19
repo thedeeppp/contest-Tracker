@@ -219,7 +219,14 @@ const ContestTracker = () => {
               {contests.upcoming
                 .filter(c => platformFilter === "all" || c.platform === platformFilter)
                 .map(contest => (
-                  <ContestCard key={contest._id} contest={contest} darkMode={darkMode} />
+                  <ContestCard 
+                    key={contest._id} 
+                    contest={contest} 
+                    darkMode={darkMode} 
+                    isBookmarked={isBookmarked} 
+                    onToggleBookmark={toggleBookmark} 
+                    timeRemaining={timeRemaining}
+                  />
                 ))}
             </div>
             <h2 className="text-2xl font-bold mt-8 mb-4">Past Contests</h2>
@@ -227,7 +234,14 @@ const ContestTracker = () => {
               {contests.past
                 .filter(c => platformFilter === "all" || c.platform === platformFilter)
                 .map(contest => (
-                  <ContestCard key={contest._id} contest={contest} darkMode={darkMode} />
+                  <ContestCard 
+                    key={contest._id} 
+                    contest={contest} 
+                    darkMode={darkMode} 
+                    isBookmarked={isBookmarked} 
+                    onToggleBookmark={toggleBookmark} 
+                    timeRemaining={timeRemaining}
+                  />
                 ))}
             </div>
           </div>
